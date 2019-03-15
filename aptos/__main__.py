@@ -3,7 +3,7 @@ import json
 import sys
 import colorama
 
-from termcolor import colored
+from .formatter import Formatter
 from .parser import SchemaParser
 from .primitive import Object
 from .visitor import ValidationVisitor
@@ -18,8 +18,8 @@ def validate(arguments):
     try:
         component.accept(ValidationVisitor(instance))
     except AssertionError as e:
-        sys.exit(colored('error', 'red') + ' {!r}'.format(e.args[0]))
-    print(colored('success', 'green') + ' instance {!r} is valid against the schema {!r}'.format(instance, arguments.schema))  # noqa: E501
+        sys.exit(Formatter.format_unsuccessful_action( ' {!r}'.format(e.args[0])))
+    print(Formatter.format_successful_action(Formatter.valid_instance_meesage(instance, arguments.schema)))  # noqa: E501
 
 
 def convert(arguments):
@@ -27,7 +27,7 @@ def convert(arguments):
         schema = json.load(fp)
     component = SchemaParser.parse(schema)
     if not isinstance(component, Object):
-        sys.exit(colored('error', 'red') + ' cannot convert schema {!r} into {!r} format, schema must be of type "object"'.format(arguments.schema, arguments.format))  # noqa: E501
+        sys.exit(Formatter.format_unsuccessful_action(Formatter.cannot_convert_schema_message(arguments.schema, arguments.format))) # noqa: E501
     Visitor = {
         'avro': AvroSchemaVisitor,
     }[arguments.format]
